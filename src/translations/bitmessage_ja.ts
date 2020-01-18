@@ -90,7 +90,7 @@
     <message>
         <location filename="../bitmessageqt/__init__.py" line="2266"/>
         <source>Registration failed:</source>
-        <translation type="unfinished"/>
+        <translation>登録に失敗しました:</translation>
     </message>
     <message>
         <location filename="../bitmessageqt/__init__.py" line="2266"/>
@@ -363,7 +363,7 @@ Please type the desired email address (including @mailchuck.com) below:</source>
     <message>
         <location filename="../bitmessageqt/__init__.py" line="990"/>
         <source>Encryption key request queued.</source>
-        <translation type="unfinished"/>
+        <translation>暗号化キーリクエストをキューへ登録しました。</translation>
     </message>
     <message>
         <location filename="../bitmessageqt/__init__.py" line="1036"/>
