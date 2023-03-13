@@ -723,13 +723,13 @@ class singleWorker(StoppableThread):
             ''' WHERE status IN ('doingpubkeypow', 'doingmsgpow') '''
             ''' AND folder='sent' ''')
         queryreturn = sqlQuery(
-            '''SELECT toaddress, fromaddress, subject, message, '''
+            '''SELECT msgid, toaddress, fromaddress, subject, message, '''
             ''' ackdata, status, ttl, retrynumber, encodingtype FROM '''
             ''' sent WHERE (status='msgqueued' or status='forcepow') '''
             ''' and folder='sent' ''')
         # while we have a msg that needs some work
         for row in queryreturn:
-            toaddress, fromaddress, subject, message, \
+            msgid, toaddress, fromaddress, subject, message, \
                 ackdata, status, TTL, retryNumber, encoding = row
             # toStatus
             _, toAddressVersionNumber, toStreamNumber, toRipe = \
@@ -759,8 +759,8 @@ class singleWorker(StoppableThread):
             elif config.has_section(toaddress):
                 if not sqlExecute(
                     '''UPDATE sent SET status='doingmsgpow' '''
-                    ''' WHERE toaddress=? AND status='msgqueued' AND folder='sent' ''',
-                    toaddress
+                    ''' WHERE msgid=? ''',
+                    msgid
                 ):
                     continue
                 status = 'doingmsgpow'
@@ -775,8 +775,8 @@ class singleWorker(StoppableThread):
                     # set the status of this msg to doingmsgpow
                     if not sqlExecute(
                         '''UPDATE sent SET status='doingmsgpow' '''
-                        ''' WHERE toaddress=? AND status='msgqueued' AND folder='sent' ''',
-                        toaddress
+                        ''' WHERE msgid=? ''',
+                        msgid
                     ):
                         continue
                     status = 'doingmsgpow'
@@ -804,10 +804,9 @@ class singleWorker(StoppableThread):
                         # We already sent a request for the pubkey
                         sqlExecute(
                             '''UPDATE sent SET status='awaitingpubkey', '''
-                            ''' sleeptill=? WHERE toaddress=? '''
-                            ''' AND status='msgqueued' ''',
+                            ''' sleeptill=? WHERE msgid=? ''',
                             int(time.time()) + 2.5 * 24 * 60 * 60,
-                            toaddress
+                            msgid
                         )
                         queues.UISignalQueue.put((
                             'updateSentItemStatusByToAddress', (
@@ -858,12 +857,8 @@ class singleWorker(StoppableThread):
                                         '''UPDATE sent SET '''
                                         ''' status='doingmsgpow', '''
                                         ''' retrynumber=0 WHERE '''
-                                        ''' toaddress=? AND '''
-                                        ''' (status='msgqueued' or '''
-                                        ''' status='awaitingpubkey' or '''
-                                        ''' status='doingpubkeypow') AND '''
-                                        ''' folder='sent' ''',
-                                        toaddress)
+                                        ''' msgid=? ''',
+                                        msgid)
                                     del state.neededPubkeys[tag]
                                     break
                                 # else:
@@ -879,8 +874,8 @@ class singleWorker(StoppableThread):
                             sqlExecute(
                                 '''UPDATE sent SET '''
                                 ''' status='doingpubkeypow' WHERE '''
-                                ''' toaddress=? AND status='msgqueued' AND folder='sent' ''',
-                                toaddress
+                                ''' msgid=? ''',
+                                msgid
                             )
                             queues.UISignalQueue.put((
                                 'updateSentItemStatusByToAddress', (
